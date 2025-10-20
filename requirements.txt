@@ -1,0 +1,18 @@
+# AI & LLM
+anthropic>=0.18.0
+
+# Database Connectors
+psycopg2-binary>=2.9.9
+PyMySQL>=1.1.0
+
+# Web Framework
+flask>=3.0.0
+flask-cors>=4.0.0
+
+# Utilities
+python-dotenv>=1.0.0
+pyyaml>=6.0.1
+jinja2>=3.1.3
+
+# Report Generation
+markdown>=3.5.0
