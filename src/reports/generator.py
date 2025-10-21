@@ -19,11 +19,13 @@ class ReportGenerator:
 
         # Scan Info
         scan_info = report['scan_info']
+        db_info = report['database_info']
         md.append("## Scan Information\n")
-        md.append(f"- **Database:** {scan_info['database']}")
-        md.append(f"- **Host:** {scan_info['host']}:{scan_info['port']}")
-        md.append(f"- **Version:** {scan_info['version'][:100]}")
-        md.append(f"- **Framework:** {scan_info['compliance_framework']}\n")
+        md.append(f"- **Database:** {db_info['database']}")
+        md.append(f"- **Host:** {db_info['host']}:{db_info['port']}")
+        md.append(f"- **Version:** {db_info['version'][:100]}")
+        md.append(f"- **Framework:** {scan_info['compliance_framework']}")
+        md.append(f"- **Scanned:** {scan_info['timestamp']}\n")
 
         # Overall Risk Assessment
         risk = report['overall_risk_assessment']
@@ -37,28 +39,29 @@ class ReportGenerator:
         md.append(f"- Compliance: {risk['compliance_percentage']}%\n")
 
         # Configuration Analysis
-        config_analysis = report['configuration_analysis']
-        if 'error' not in config_analysis:
+        config_analysis = report['config_analysis']
+        if 'error' not in config_analysis and config_analysis.get('issues'):
             md.append("## Configuration Analysis\n")
 
-            if config_analysis.get('critical_issues'):
+            critical_issues = [i for i in config_analysis['issues'] if i.get('severity') == 'critical']
+            if critical_issues:
                 md.append("### 🔴 Critical Issues\n")
-                for issue in config_analysis['critical_issues']:
-                    md.append(f"#### {issue['parameter']}")
-                    md.append(f"- **Current Value:** `{issue['current_value']}`")
-                    md.append(f"- **Issue:** {issue['issue']}")
-                    md.append(f"- **Recommendation:** {issue['recommendation']}\n")
+                for issue in critical_issues:
+                    md.append(f"#### {issue['title']}")
+                    md.append(f"- **Issue:** {issue['description']}")
+                    md.append(f"- **Remediation:** {issue['remediation']}\n")
 
-            if config_analysis.get('warnings'):
+            other_issues = [i for i in config_analysis['issues'] if i.get('severity') != 'critical']
+            if other_issues:
                 md.append("### ⚠️  Warnings\n")
-                for warning in config_analysis['warnings'][:5]:  # Limit to 5
-                    md.append(f"- **{warning['parameter']}:** {warning['concern']}")
+                for issue in other_issues[:5]:  # Limit to 5
+                    md.append(f"- **{issue['title']}:** {issue['description']}")
 
         # Vulnerability Analysis
         vuln_analysis = report['vulnerability_analysis']
         if 'error' not in vuln_analysis and vuln_analysis.get('vulnerabilities'):
             md.append("\n## Vulnerability Analysis\n")
-            md.append(f"**Security Score:** {vuln_analysis.get('security_score', 'N/A')}/100\n")
+            md.append(f"**Vulnerabilities Found:** {len(vuln_analysis['vulnerabilities'])}\n")
             for vuln in vuln_analysis['vulnerabilities'][:5]:
                 severity_emoji = {"critical": "🔴", "high": "🟠", "medium": "🟡", "low": "🟢"}
                 md.append(f"### {severity_emoji.get(vuln['severity'], '')} {vuln['title']}")
@@ -71,18 +74,18 @@ class ReportGenerator:
         # Compliance Analysis
         compliance = report['compliance_analysis']
         if 'error' not in compliance:
-            md.append(f"\n## {compliance['framework']} Compliance\n")
-            md.append(f"**Status:** {compliance['overall_status'].upper()}")
-            md.append(f"**Compliance:** {compliance['compliance_percentage']}%\n")
+            md.append(f"\n## {scan_info['compliance_framework']} Compliance\n")
+            md.append(f"**Passed:** {compliance['passed_checks']}/{compliance['total_checks']}")
+            md.append(f"**Compliance:** {compliance['compliance_percentage']:.1f}%\n")
 
             if compliance.get('failed_checks'):
                 md.append("### Failed Checks\n")
                 for check in compliance['failed_checks'][:10]:
                     md.append(f"#### [{check['check_id']}] {check['title']}")
-                    md.append(f"- **Risk:** {check.get('risk_level', 'N/A').upper()}")
-                    md.append(f"- **Required:** {check['required_state']}")
-                    md.append(f"- **Current:** {check['current_state']}")
-                    md.append(f"- **Fix:** {check['remediation']}\n")
+                    md.append(f"- **Severity:** {check.get('severity', 'N/A').upper()}")
+                    md.append(f"- **Requirement:** {check['requirement']}")
+                    md.append(f"- **Current:** {check['current_value']}")
+                    md.append(f"- **Remediation:** {check['remediation']}\n")
 
         md.append("\n---")
         md.append("\n*Generated by AI-Powered Database Security Scanner*")
