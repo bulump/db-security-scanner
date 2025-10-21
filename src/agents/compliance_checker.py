@@ -4,7 +4,7 @@ Validates database configuration against compliance frameworks.
 """
 import anthropic
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 
 class ComplianceCheckerAgent:

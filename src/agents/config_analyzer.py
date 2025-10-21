@@ -4,7 +4,7 @@ Analyzes database configuration for security issues.
 """
 import anthropic
 import os
-from typing import Dict, Any, List
+from typing import Dict, Any
 
 
 class ConfigAnalyzerAgent:
@@ -32,7 +32,8 @@ class ConfigAnalyzerAgent:
         config_summary = self._prepare_config_summary(config)
 
         prompt = f"""You are an expert database security analyst with 20+ years of experience.
-Analyze this {db_type.upper()} database configuration and identify security issues, misconfigurations, and provide recommendations.
+Analyze this {db_type.upper()} database configuration and identify security issues,
+misconfigurations, and provide recommendations.
 
 DATABASE CONFIGURATION:
 {config_summary}
