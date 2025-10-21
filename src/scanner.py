@@ -5,6 +5,7 @@ Orchestrates all agents to perform comprehensive security analysis.
 from typing import Dict, Any
 from .connectors import PostgreSQLConnector
 from .agents import ConfigAnalyzerAgent, VulnerabilityDetectorAgent, ComplianceCheckerAgent
+from .agents.cis_rules import CISBenchmarkRules
 
 
 class DatabaseSecurityScanner:
@@ -70,12 +71,19 @@ class DatabaseSecurityScanner:
         vulnerability_analysis = self._transform_vulnerability_analysis(vulnerability_analysis_raw)
 
         print("  → Compliance Checking...")
-        compliance_analysis_raw = self.compliance_checker.check_compliance(
-            db_info['configuration'],
-            framework=compliance_framework,
-            db_type="postgresql"
-        )
-        compliance_analysis = self._transform_compliance_analysis(compliance_analysis_raw)
+        # Use hard-coded CIS rules for PostgreSQL CIS framework
+        db_type = "postgresql"
+        if compliance_framework == "CIS" and db_type == "postgresql":
+            compliance_checks = CISBenchmarkRules.run_all_checks(db_info['configuration'])
+            compliance_analysis = self._transform_cis_checks(compliance_checks)
+        else:
+            # Use AI-based compliance checking for other frameworks
+            compliance_analysis_raw = self.compliance_checker.check_compliance(
+                db_info['configuration'],
+                framework=compliance_framework,
+                db_type="postgresql"
+            )
+            compliance_analysis = self._transform_compliance_analysis(compliance_analysis_raw)
 
         # Calculate overall risk assessment
         risk_assessment = self._calculate_overall_risk(
@@ -194,26 +202,53 @@ class DatabaseSecurityScanner:
 
         return {'vulnerabilities': vulnerabilities}
 
-    def _transform_compliance_analysis(self, raw: Dict[str, Any]) -> Dict[str, Any]:
-        """Transform compliance analysis to template format."""
+    def _transform_cis_checks(self, checks: list) -> Dict[str, Any]:
+        """Transform hard-coded CIS checks to template format."""
         failed_checks = []
         passed_checks = 0
-        total_checks = 0
+        total_checks = len(checks)
 
-        for item in raw.get('checks', []):
-            total_checks += 1
-            if item.get('status') == 'PASS':
+        for check in checks:
+            if check.get('status') == 'PASS':
                 passed_checks += 1
             else:
                 failed_checks.append({
-                    'check_id': item.get('check_id', 'Unknown'),
-                    'title': item.get('title', ''),
-                    'requirement': item.get('requirement', ''),
-                    'current_value': item.get('current_value', ''),
-                    'severity': item.get('severity', 'medium'),
-                    'remediation': item.get('remediation', '')
+                    'check_id': check.get('check_id', 'Unknown'),
+                    'title': check.get('title', ''),
+                    'requirement': check.get('requirement', ''),
+                    'current_value': check.get('current_value', ''),
+                    'severity': check.get('severity', 'medium'),
+                    'remediation': check.get('remediation', '')
                 })
 
+        compliance_percentage = (passed_checks / total_checks * 100) if total_checks > 0 else 100
+
+        return {
+            'passed_checks': passed_checks,
+            'total_checks': total_checks,
+            'compliance_percentage': compliance_percentage,
+            'failed_checks': failed_checks
+        }
+
+    def _transform_compliance_analysis(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform AI-based compliance analysis to template format."""
+        # Handle AI response format with passed_checks and failed_checks arrays
+        passed = raw.get('passed_checks', [])
+        failed = raw.get('failed_checks', [])
+
+        failed_checks = []
+        for check in failed:
+            failed_checks.append({
+                'check_id': check.get('check_id', 'Unknown'),
+                'title': check.get('title', ''),
+                'requirement': check.get('requirement', ''),
+                'current_value': check.get('current_state', ''),
+                'severity': check.get('risk_level', 'medium'),
+                'remediation': check.get('remediation', '')
+            })
+
+        total_checks = len(passed) + len(failed)
+        passed_checks = len(passed)
         compliance_percentage = (passed_checks / total_checks * 100) if total_checks > 0 else 100
 
         return {
