@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Database Security Scanner{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="header-content">
+                <h1>🔒 Database Security Scanner</h1>
+                <p class="tagline">AI-Powered Database Security Analysis</p>
+            </div>
+            <nav>
+                <a href="/" class="{% if request.path == '/' %}active{% endif %}">New Scan</a>
+                <a href="https://github.com/bulump/db-security-scanner" target="_blank">GitHub</a>
+            </nav>
+        </header>
+
+        <main>
+            {% block content %}{% endblock %}
+        </main>
+
+        <footer>
+            <p>Built with <a href="https://www.anthropic.com/" target="_blank">Claude AI</a> by <a href="https://bulump.github.io" target="_blank">Chris Bielinski</a></p>
+            <p class="note">CIS PostgreSQL 16 Benchmark v1.1 | 20+ years of security expertise</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

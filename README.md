@@ -57,6 +57,24 @@ cp .env.example .env
 
 ### Usage
 
+#### Option 1: Web Interface (Recommended for Demos)
+
+```bash
+# Activate virtual environment
+source venv/bin/activate
+
+# Start the web server
+python app.py
+```
+
+Then open your browser to `http://localhost:5001` and use the web interface to:
+- Enter database connection details
+- Run security scans
+- View results in a beautiful, interactive dashboard
+- Download JSON reports
+
+#### Option 2: Python API
+
 ```python
 from src.scanner import DatabaseSecurityScanner
 from src.reports.generator import ReportGenerator
@@ -79,7 +97,7 @@ md_report = ReportGenerator.generate_markdown(report)
 print(md_report)
 ```
 
-### Example Scan
+#### Option 3: Command Line Example
 
 ```bash
 cd examples
@@ -173,7 +191,8 @@ This project demonstrates:
 - ✅ PostgreSQL connector complete
 - ✅ Three AI agents functional
 - ✅ Report generation working
-- 🚧 Web interface (in progress)
+- ✅ Web interface with interactive dashboard
+- ✅ CIS PostgreSQL 16 Benchmark v1.1 validation
 - 📋 MySQL support (planned)
 - 📋 PDF reports (planned)
 

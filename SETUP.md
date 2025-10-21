@@ -50,6 +50,16 @@ source venv/bin/activate
 
 ### 4. Run Your First Scan
 
+**Option A: Web Interface (Recommended for Demos)**
+
+```bash
+python app.py
+```
+
+Then open your browser to http://localhost:5001 and use the interactive web interface!
+
+**Option B: Command Line**
+
 ```bash
 python examples/sample_scan.py
 ```
@@ -133,10 +143,20 @@ python examples/sample_scan.py
 
 ## Next Steps:
 
-- [ ] Run your first scan
+- [ ] Run your first scan (web interface or command line)
 - [ ] Review the generated reports
 - [ ] Try scanning different databases
 - [ ] Modify the agents to customize analysis
-- [ ] Build the web interface (optional)
+- [ ] Explore the web dashboard at http://localhost:5001
+
+## Web Interface Features:
+
+The web interface (`python app.py`) provides:
+- 🎨 Beautiful dark-themed dashboard
+- 📊 Interactive scan results with real-time progress
+- 🎯 Multiple compliance framework selection (CIS, STIG, SOC2, HIPAA, PCI-DSS)
+- 📥 Download reports in JSON format
+- 🔍 Visual security score and risk level indicators
+- 📋 Detailed findings with remediation steps
 
 Enjoy your AI-powered security scanner! 🚀

@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+
+{% block title %}Scan Results - Database Security Scanner{% endblock %}
+
+{% block content %}
+<div class="results-container">
+    <div class="results-header">
+        <h2>Security Scan Results</h2>
+        <div class="scan-meta">
+            <span>Database: <strong>{{ report.database_info.database }}</strong></span>
+            <span>Host: <strong>{{ report.database_info.host }}:{{ report.database_info.port }}</strong></span>
+            <span>Scanned: <strong>{{ report.scan_info.timestamp }}</strong></span>
+        </div>
+        <a href="/" class="btn-secondary">Run New Scan</a>
+    </div>
+
+    <div class="summary-cards">
+        <div class="summary-card score-card">
+            <h3>Security Score</h3>
+            <div class="score {{ 'score-high' if report.security_score >= 80 else 'score-medium' if report.security_score >= 60 else 'score-low' }}">
+                {{ report.security_score }}/100
+            </div>
+        </div>
+
+        <div class="summary-card risk-card">
+            <h3>Risk Level</h3>
+            <div class="risk-badge risk-{{ report.risk_level.lower() }}">
+                {{ report.risk_level }}
+            </div>
+        </div>
+
+        <div class="summary-card issues-card">
+            <h3>Critical Issues</h3>
+            <div class="issue-count">
+                {{ report.critical_issues }}
+            </div>
+        </div>
+
+        <div class="summary-card compliance-card">
+            <h3>Compliance</h3>
+            <div class="compliance-percentage">
+                {{ "%.0f"|format(report.compliance_analysis.compliance_percentage) }}%
+            </div>
+        </div>
+    </div>
+
+    <div class="results-section">
+        <h3>🔧 Configuration Analysis</h3>
+        <div class="analysis-content">
+            <div class="findings">
+                {% if report.config_analysis.issues %}
+                <h4>Issues Found ({{ report.config_analysis.issues|length }})</h4>
+                <ul class="issues-list">
+                    {% for issue in report.config_analysis.issues %}
+                    <li class="issue-item severity-{{ issue.severity }}">
+                        <div class="issue-header">
+                            <span class="severity-badge">{{ issue.severity }}</span>
+                            <strong>{{ issue.title }}</strong>
+                        </div>
+                        <p>{{ issue.description }}</p>
+                        {% if issue.remediation %}
+                        <div class="remediation">
+                            <strong>Remediation:</strong> {{ issue.remediation }}
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="no-issues">✅ No configuration issues found</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="results-section">
+        <h3>🛡️ Vulnerability Analysis</h3>
+        <div class="analysis-content">
+            <div class="vuln-summary">
+                <p><strong>Database Version:</strong> {{ report.database_info.version }}</p>
+                <p><strong>Vulnerabilities Found:</strong> {{ report.vulnerability_analysis.vulnerabilities|length }}</p>
+            </div>
+
+            {% if report.vulnerability_analysis.vulnerabilities %}
+            <div class="vulnerabilities">
+                <h4>Vulnerabilities</h4>
+                <ul class="issues-list">
+                    {% for vuln in report.vulnerability_analysis.vulnerabilities %}
+                    <li class="issue-item severity-{{ vuln.severity }}">
+                        <div class="issue-header">
+                            <span class="severity-badge">{{ vuln.severity }}</span>
+                            <strong>{{ vuln.title }}</strong>
+                            {% if vuln.cve_id %}
+                            <span class="cve-badge">{{ vuln.cve_id }}</span>
+                            {% endif %}
+                        </div>
+                        <p>{{ vuln.description }}</p>
+                        {% if vuln.remediation %}
+                        <div class="remediation">
+                            <strong>Remediation:</strong> {{ vuln.remediation }}
+                        </div>
+                        {% endif %}
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% else %}
+            <p class="no-issues">✅ No vulnerabilities detected</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="results-section">
+        <h3>📋 Compliance Analysis</h3>
+        <div class="analysis-content">
+            <div class="compliance-summary">
+                <p><strong>Framework:</strong> {{ report.scan_info.compliance_framework }}</p>
+                <p><strong>Passed Checks:</strong> {{ report.compliance_analysis.passed_checks }}/{{ report.compliance_analysis.total_checks }}</p>
+                <p><strong>Compliance Rate:</strong> {{ "%.1f"|format(report.compliance_analysis.compliance_percentage) }}%</p>
+            </div>
+
+            {% if report.compliance_analysis.failed_checks %}
+            <div class="failed-checks">
+                <h4>Failed Compliance Checks ({{ report.compliance_analysis.failed_checks|length }})</h4>
+                <ul class="issues-list">
+                    {% for check in report.compliance_analysis.failed_checks %}
+                    <li class="issue-item severity-{{ check.severity }}">
+                        <div class="issue-header">
+                            <span class="severity-badge">{{ check.severity }}</span>
+                            <strong>{{ check.check_id }}: {{ check.title }}</strong>
+                        </div>
+                        <p><strong>Requirement:</strong> {{ check.requirement }}</p>
+                        <p><strong>Current Value:</strong> {{ check.current_value }}</p>
+                        <div class="remediation">
+                            <strong>Remediation:</strong> {{ check.remediation }}
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% else %}
+            <p class="no-issues">✅ All compliance checks passed</p>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="actions">
+        <a href="/api/results/{{ scan_id }}" class="btn-secondary" download="scan_{{ scan_id }}.json">
+            Download JSON Report
+        </a>
+        <a href="/" class="btn-primary">Run Another Scan</a>
+    </div>
+</div>
+{% endblock %}
