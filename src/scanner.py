@@ -59,44 +59,56 @@ class DatabaseSecurityScanner:
         print("\n🤖 Running AI Security Analysis...")
 
         print("  → Configuration Analysis...")
-        config_analysis = self.config_analyzer.analyze(
+        config_analysis_raw = self.config_analyzer.analyze(
             db_info['configuration'],
             db_type="postgresql"
         )
+        config_analysis = self._transform_config_analysis(config_analysis_raw)
 
         print("  → Vulnerability Detection...")
-        vulnerability_analysis = self.vulnerability_detector.detect(db_info)
+        vulnerability_analysis_raw = self.vulnerability_detector.detect(db_info)
+        vulnerability_analysis = self._transform_vulnerability_analysis(vulnerability_analysis_raw)
 
         print("  → Compliance Checking...")
-        compliance_analysis = self.compliance_checker.check_compliance(
+        compliance_analysis_raw = self.compliance_checker.check_compliance(
             db_info['configuration'],
             framework=compliance_framework,
             db_type="postgresql"
         )
+        compliance_analysis = self._transform_compliance_analysis(compliance_analysis_raw)
+
+        # Calculate overall risk assessment
+        risk_assessment = self._calculate_overall_risk(
+            config_analysis,
+            vulnerability_analysis,
+            compliance_analysis
+        )
 
         # Compile complete report
+        from datetime import datetime
+
         report = {
             'scan_info': {
+                'timestamp': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+                'compliance_framework': compliance_framework
+            },
+            'database_info': {
                 'database': database,
                 'host': host,
                 'port': port,
                 'version': db_info['version'],
-                'compliance_framework': compliance_framework
-            },
-            'database_info': {
                 'user_count': len(db_info['users']),
                 'superuser_count': sum(1 for u in db_info['users'] if u.get('is_superuser')),
                 'encryption_status': db_info['encryption'],
                 'audit_logging_status': db_info['audit_logging']
             },
-            'configuration_analysis': config_analysis,
+            'config_analysis': config_analysis,
             'vulnerability_analysis': vulnerability_analysis,
             'compliance_analysis': compliance_analysis,
-            'overall_risk_assessment': self._calculate_overall_risk(
-                config_analysis,
-                vulnerability_analysis,
-                compliance_analysis
-            )
+            'security_score': risk_assessment['security_score'],
+            'risk_level': risk_assessment['risk_level'].upper(),
+            'critical_issues': risk_assessment['critical_issue_count'],
+            'overall_risk_assessment': risk_assessment
         }
 
         print("\n✅ Scan complete!")
@@ -113,8 +125,9 @@ class DatabaseSecurityScanner:
         risk_score = 100  # Start with perfect score
 
         # Deduct points for issues
-        critical_issues = len(config_analysis.get('critical_issues', []))
-        warnings = len(config_analysis.get('warnings', []))
+        issues = config_analysis.get('issues', [])
+        critical_issues = sum(1 for i in issues if i.get('severity') == 'critical')
+        warnings = sum(1 for i in issues if i.get('severity') in ['medium', 'high'])
         vulnerabilities = len(vuln_analysis.get('vulnerabilities', []))
         compliance_pct = compliance_analysis.get('compliance_percentage', 100)
 
@@ -140,4 +153,72 @@ class DatabaseSecurityScanner:
             'warning_count': warnings,
             'vulnerability_count': vulnerabilities,
             'compliance_percentage': compliance_pct
+        }
+
+    def _transform_config_analysis(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform config analysis to template format."""
+        issues = []
+
+        # Add critical issues
+        for item in raw.get('critical_issues', []):
+            issues.append({
+                'title': f"{item.get('parameter', 'Unknown')} Misconfiguration",
+                'description': item.get('issue', ''),
+                'severity': 'critical',
+                'remediation': item.get('recommendation', '')
+            })
+
+        # Add warnings
+        for item in raw.get('warnings', []):
+            issues.append({
+                'title': f"{item.get('parameter', 'Unknown')} Warning",
+                'description': item.get('concern', ''),
+                'severity': 'medium',
+                'remediation': item.get('recommendation', '')
+            })
+
+        return {'issues': issues}
+
+    def _transform_vulnerability_analysis(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform vulnerability analysis to template format."""
+        vulnerabilities = []
+
+        for item in raw.get('vulnerabilities', []):
+            vulnerabilities.append({
+                'title': item.get('title', 'Unknown Vulnerability'),
+                'description': item.get('description', ''),
+                'severity': item.get('severity', 'medium'),
+                'cve_id': item.get('cve_id'),
+                'remediation': item.get('remediation', '')
+            })
+
+        return {'vulnerabilities': vulnerabilities}
+
+    def _transform_compliance_analysis(self, raw: Dict[str, Any]) -> Dict[str, Any]:
+        """Transform compliance analysis to template format."""
+        failed_checks = []
+        passed_checks = 0
+        total_checks = 0
+
+        for item in raw.get('checks', []):
+            total_checks += 1
+            if item.get('status') == 'PASS':
+                passed_checks += 1
+            else:
+                failed_checks.append({
+                    'check_id': item.get('check_id', 'Unknown'),
+                    'title': item.get('title', ''),
+                    'requirement': item.get('requirement', ''),
+                    'current_value': item.get('current_value', ''),
+                    'severity': item.get('severity', 'medium'),
+                    'remediation': item.get('remediation', '')
+                })
+
+        compliance_percentage = (passed_checks / total_checks * 100) if total_checks > 0 else 100
+
+        return {
+            'passed_checks': passed_checks,
+            'total_checks': total_checks,
+            'compliance_percentage': compliance_percentage,
+            'failed_checks': failed_checks
         }
