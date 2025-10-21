@@ -18,7 +18,7 @@ class ReportGenerator:
     """Generates security scan reports in various formats."""
 
     @staticmethod
-    def generate_markdown(report: Dict[str, Any]) -> str:
+    def generate_markdown(report: Dict[str, Any]) -> str:  # noqa: C901
         """Generate Markdown format report."""
         md = []
         md.append("# Database Security Scan Report\n")
@@ -180,7 +180,7 @@ class ReportGenerator:
 
         # Section header with colored background
         header_table = Table([[Paragraph("Scan Information", styles['CustomHeading'])]],
-                            colWidths=[6.5*inch])
+                             colWidths=[6.5*inch])
         header_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
@@ -224,7 +224,7 @@ class ReportGenerator:
 
         # Section header with colored background
         header_table = Table([[Paragraph("Overall Risk Assessment", styles['CustomHeading'])]],
-                            colWidths=[6.5*inch])
+                             colWidths=[6.5*inch])
         header_table.setStyle(TableStyle([
             ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
             ('TOPPADDING', (0, 0), (-1, -1), 8),
@@ -324,7 +324,7 @@ class ReportGenerator:
 
             # Section header with colored background
             header_table = Table([[Paragraph(f"{scan_info['compliance_framework']} Compliance",
-                                              styles['CustomHeading'])]],
+                                             styles['CustomHeading'])]],
                                  colWidths=[6.5*inch])
             header_table.setStyle(TableStyle([
                 ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
