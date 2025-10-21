@@ -18,7 +18,7 @@
         <div class="summary-card score-card">
             <h3>Security Score</h3>
             <div class="score {{ 'score-high' if report.security_score >= 80 else 'score-medium' if report.security_score >= 60 else 'score-low' }}">
-                {{ report.security_score }}/100
+                {{ "%.0f"|format(report.security_score) }}/100
             </div>
         </div>
 
