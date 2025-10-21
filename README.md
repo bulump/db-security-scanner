@@ -180,6 +180,30 @@ This project demonstrates:
 - **Database**: PostgreSQL (psycopg2)
 - **Web**: Flask (for demo interface)
 - **Reports**: ReportLab (PDF), Markdown, JSON, HTML
+- **Testing**: pytest, pytest-cov, pytest-mock
+
+## 🧪 Testing
+
+The project includes a comprehensive test suite with 31 tests covering core functionality:
+
+```bash
+# Install test dependencies
+pip install -r requirements-dev.txt
+
+# Run tests
+pytest
+
+# Run with coverage report
+pytest --cov=src --cov-report=html
+```
+
+**Test Coverage:**
+- ✅ Report generation (PDF, JSON, Markdown, HTML)
+- ✅ CIS PostgreSQL 16 Benchmark compliance rules
+- ✅ Flask API endpoints
+- ✅ Error handling and edge cases
+
+**Current Coverage: 58%** (focusing on critical business logic)
 
 ## 📈 Project Status
 
@@ -189,6 +213,7 @@ This project demonstrates:
 - ✅ Report generation (PDF, MD, JSON, HTML)
 - ✅ Web interface with interactive dashboard
 - ✅ CIS PostgreSQL 16 Benchmark v1.1 validation
+- ✅ Comprehensive test suite (31 tests, 58% coverage)
 
 ## 🤝 Contributing
 
