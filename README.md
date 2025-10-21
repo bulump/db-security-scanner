@@ -26,7 +26,7 @@ This project demonstrates the application of AI agents to database security - au
   - HTML (web-viewable)
 
 - **🎯 Compliance Frameworks**:
-  - CIS Benchmarks
+  - CIS Benchmarks (PostgreSQL 16 Benchmark v1.1)
   - DISA STIG
   - SOC 2
   - HIPAA
@@ -143,9 +143,10 @@ Each agent uses Claude AI with specialized prompts based on 20+ years of databas
    - Assesses exploitability
 
 3. **Compliance Checker**
-   - Validates against compliance frameworks
-   - Generates pass/fail reports
-   - Provides remediation guidance
+   - Validates against compliance frameworks (CIS PostgreSQL 16 Benchmark v1.1)
+   - Includes hard-coded validation for 6 critical CIS checks (2.2, 2.3, 2.4, 2.5, 4.2, 4.3)
+   - AI-based analysis for broader compliance coverage
+   - Generates pass/fail reports with remediation guidance
    - Calculates compliance percentage
 
 ## 🎓 Learning Outcomes
