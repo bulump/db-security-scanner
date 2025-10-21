@@ -5,6 +5,13 @@ Creates human-readable security reports.
 import json
 from datetime import datetime
 from typing import Dict, Any
+from io import BytesIO
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.units import inch
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, PageBreak
+from reportlab.lib.enums import TA_CENTER, TA_LEFT
 
 
 class ReportGenerator:
@@ -119,3 +126,167 @@ class ReportGenerator:
     def generate_json(report: Dict[str, Any]) -> str:
         """Generate JSON format report."""
         return json.dumps(report, indent=2)
+
+    @staticmethod
+    def generate_pdf(report: Dict[str, Any]) -> bytes:
+        """Generate PDF format report."""
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter,
+                                rightMargin=72, leftMargin=72,
+                                topMargin=72, bottomMargin=18)
+
+        # Container for the 'Flowable' objects
+        elements = []
+
+        # Define styles
+        styles = getSampleStyleSheet()
+        styles.add(ParagraphStyle(name='CustomTitle',
+                                  parent=styles['Heading1'],
+                                  fontSize=24,
+                                  textColor=colors.HexColor('#0a192f'),
+                                  spaceAfter=30,
+                                  alignment=TA_CENTER))
+        styles.add(ParagraphStyle(name='CustomHeading',
+                                  parent=styles['Heading2'],
+                                  fontSize=16,
+                                  textColor=colors.HexColor('#64ffda'),
+                                  spaceAfter=12))
+        styles.add(ParagraphStyle(name='CustomBody',
+                                  parent=styles['BodyText'],
+                                  fontSize=10,
+                                  spaceAfter=12))
+
+        # Title
+        title = Paragraph("🔒 Database Security Scan Report", styles['CustomTitle'])
+        elements.append(title)
+        elements.append(Spacer(1, 0.2*inch))
+
+        # Scan Information
+        scan_info = report['scan_info']
+        db_info = report['database_info']
+
+        elements.append(Paragraph("Scan Information", styles['CustomHeading']))
+
+        scan_data = [
+            ['Database:', db_info['database']],
+            ['Host:', f"{db_info['host']}:{db_info['port']}"],
+            ['Version:', db_info['version'][:80]],
+            ['Framework:', scan_info['compliance_framework']],
+            ['Scan Time:', scan_info['timestamp']]
+        ]
+
+        t = Table(scan_data, colWidths=[2*inch, 4*inch])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e6f1ff')),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 0.3*inch))
+
+        # Overall Risk Assessment
+        risk = report['overall_risk_assessment']
+        elements.append(Paragraph("Overall Risk Assessment", styles['CustomHeading']))
+
+        # Risk summary table
+        risk_color = colors.red if risk['risk_level'] == 'critical' else \
+                     colors.orange if risk['risk_level'] == 'high' else \
+                     colors.yellow if risk['risk_level'] == 'medium' else colors.green
+
+        risk_data = [
+            ['Security Score:', f"{risk['security_score']}/100"],
+            ['Risk Level:', risk['risk_level'].upper()],
+            ['Critical Issues:', str(risk['critical_issue_count'])],
+            ['Warnings:', str(risk['warning_count'])],
+            ['Vulnerabilities:', str(risk['vulnerability_count'])],
+            ['Compliance:', f"{risk['compliance_percentage']:.1f}%"]
+        ]
+
+        t = Table(risk_data, colWidths=[2*inch, 4*inch])
+        t.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e6f1ff')),
+            ('BACKGROUND', (1, 1), (1, 1), risk_color),
+            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('TEXTCOLOR', (1, 1), (1, 1), colors.white),
+            ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
+            ('FONTNAME', (1, 1), (1, 1), 'Helvetica-Bold'),
+            ('FONTSIZE', (0, 0), (-1, -1), 10),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
+            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
+        ]))
+        elements.append(t)
+        elements.append(Spacer(1, 0.3*inch))
+
+        # Configuration Analysis
+        config_analysis = report['config_analysis']
+        if config_analysis.get('issues'):
+            elements.append(Paragraph("Configuration Analysis", styles['CustomHeading']))
+
+            for issue in config_analysis['issues'][:10]:  # Limit to 10 issues
+                severity_color = colors.red if issue['severity'] == 'critical' else \
+                                colors.orange if issue['severity'] == 'high' else \
+                                colors.yellow if issue['severity'] == 'medium' else colors.blue
+
+                issue_text = f"<b>[{issue['severity'].upper()}]</b> {issue['title']}"
+                elements.append(Paragraph(issue_text, styles['CustomBody']))
+                elements.append(Paragraph(f"<i>{issue['description']}</i>", styles['CustomBody']))
+                if issue.get('remediation'):
+                    elements.append(Paragraph(f"<b>Remediation:</b> {issue['remediation']}", styles['CustomBody']))
+                elements.append(Spacer(1, 0.1*inch))
+
+        # Vulnerability Analysis
+        vuln_analysis = report['vulnerability_analysis']
+        if vuln_analysis.get('vulnerabilities'):
+            elements.append(PageBreak())
+            elements.append(Paragraph("Vulnerability Analysis", styles['CustomHeading']))
+
+            for vuln in vuln_analysis['vulnerabilities'][:10]:  # Limit to 10
+                vuln_text = f"<b>[{vuln['severity'].upper()}]</b> {vuln['title']}"
+                if vuln.get('cve_id'):
+                    vuln_text += f" - {vuln['cve_id']}"
+                elements.append(Paragraph(vuln_text, styles['CustomBody']))
+                elements.append(Paragraph(f"<i>{vuln['description']}</i>", styles['CustomBody']))
+                if vuln.get('remediation'):
+                    elements.append(Paragraph(f"<b>Remediation:</b> {vuln['remediation']}", styles['CustomBody']))
+                elements.append(Spacer(1, 0.1*inch))
+
+        # Compliance Analysis
+        compliance = report['compliance_analysis']
+        if compliance.get('failed_checks'):
+            elements.append(PageBreak())
+            elements.append(Paragraph(f"{scan_info['compliance_framework']} Compliance", styles['CustomHeading']))
+
+            comp_summary = f"<b>Compliance Rate:</b> {compliance['compliance_percentage']:.1f}% " \
+                          f"({compliance['passed_checks']}/{compliance['total_checks']} checks passed)"
+            elements.append(Paragraph(comp_summary, styles['CustomBody']))
+            elements.append(Spacer(1, 0.2*inch))
+
+            elements.append(Paragraph("<b>Failed Checks:</b>", styles['CustomBody']))
+
+            for check in compliance['failed_checks'][:15]:  # Limit to 15
+                check_text = f"<b>[{check['check_id']}]</b> {check['title']}"
+                elements.append(Paragraph(check_text, styles['CustomBody']))
+                elements.append(Paragraph(f"<b>Requirement:</b> {check['requirement']}", styles['CustomBody']))
+                elements.append(Paragraph(f"<b>Current:</b> {check['current_value']}", styles['CustomBody']))
+                elements.append(Paragraph(f"<b>Remediation:</b> {check['remediation']}", styles['CustomBody']))
+                elements.append(Spacer(1, 0.15*inch))
+
+        # Footer
+        elements.append(Spacer(1, 0.5*inch))
+        footer_text = "<i>Generated by AI-Powered Database Security Scanner<br/>Combining 20+ years of database security expertise with modern AI</i>"
+        elements.append(Paragraph(footer_text, styles['CustomBody']))
+
+        # Build PDF
+        doc.build(elements)
+
+        # Get the value of the BytesIO buffer
+        pdf = buffer.getvalue()
+        buffer.close()
+        return pdf

@@ -19,6 +19,7 @@ This project demonstrates the application of AI agents to database security - au
   - PostgreSQL (fully implemented)
 
 - **📊 Comprehensive Reports**:
+  - PDF (professional, formatted)
   - JSON (machine-readable)
   - Markdown (human-readable)
   - HTML (web-viewable)
@@ -178,17 +179,16 @@ This project demonstrates:
 - **Language**: Python 3.8+
 - **Database**: PostgreSQL (psycopg2)
 - **Web**: Flask (for demo interface)
-- **Reports**: Markdown, JSON, HTML
+- **Reports**: ReportLab (PDF), Markdown, JSON, HTML
 
 ## 📈 Project Status
 
 - ✅ Core architecture implemented
 - ✅ PostgreSQL connector complete
 - ✅ Three AI agents functional
-- ✅ Report generation working
+- ✅ Report generation (PDF, MD, JSON, HTML)
 - ✅ Web interface with interactive dashboard
 - ✅ CIS PostgreSQL 16 Benchmark v1.1 validation
-- 📋 PDF reports (planned)
 
 ## 🤝 Contributing
 

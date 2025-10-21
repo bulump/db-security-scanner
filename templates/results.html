@@ -145,8 +145,11 @@
     </div>
 
     <div class="actions">
+        <a href="/api/results/{{ scan_id }}/pdf" class="btn-secondary" download="security_scan_{{ scan_id }}.pdf">
+            📄 Download PDF Report
+        </a>
         <a href="/api/results/{{ scan_id }}" class="btn-secondary" download="scan_{{ scan_id }}.json">
-            Download JSON Report
+            📊 Download JSON Report
         </a>
         <a href="/" class="btn-primary">Run Another Scan</a>
     </div>

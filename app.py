@@ -2,13 +2,14 @@
 Flask Web Interface for Database Security Scanner
 Provides a user-friendly web UI for running security scans and viewing results.
 """
-from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session, send_file
 from src.scanner import DatabaseSecurityScanner
 from src.reports.generator import ReportGenerator
 import os
 import json
 from datetime import datetime
 import secrets
+from io import BytesIO
 
 app = Flask(__name__)
 app.secret_key = os.getenv('FLASK_SECRET_KEY', secrets.token_hex(32))
@@ -104,6 +105,34 @@ def get_results_json(scan_id):
         return jsonify({'error': 'Scan not found'}), 404
 
     return jsonify(report)
+
+
+@app.route('/api/results/<scan_id>/pdf')
+def get_results_pdf(scan_id):
+    """Get scan results as PDF."""
+    report = scan_results.get(scan_id)
+
+    if not report:
+        return jsonify({'error': 'Scan not found'}), 404
+
+    try:
+        # Generate PDF
+        pdf_data = ReportGenerator.generate_pdf(report)
+
+        # Create BytesIO object
+        pdf_buffer = BytesIO(pdf_data)
+        pdf_buffer.seek(0)
+
+        # Send file
+        return send_file(
+            pdf_buffer,
+            mimetype='application/pdf',
+            as_attachment=True,
+            download_name=f'security_scan_{scan_id}.pdf'
+        )
+
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/health')
