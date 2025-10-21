@@ -3,7 +3,6 @@ anthropic>=0.18.0
 
 # Database Connectors
 psycopg2-binary>=2.9.9
-PyMySQL>=1.1.0
 
 # Web Framework
 flask>=3.0.0

@@ -23,7 +23,7 @@ class ConfigAnalyzerAgent:
 
         Args:
             config: Dictionary of configuration parameters
-            db_type: Type of database (postgresql, mysql, etc.)
+            db_type: Type of database (postgresql)
 
         Returns:
             Dictionary containing analysis results and recommendations
