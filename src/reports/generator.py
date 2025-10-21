@@ -143,47 +143,77 @@ class ReportGenerator:
         styles.add(ParagraphStyle(name='CustomTitle',
                                   parent=styles['Heading1'],
                                   fontSize=24,
-                                  textColor=colors.HexColor('#0a192f'),
+                                  textColor=colors.white,
                                   spaceAfter=30,
                                   alignment=TA_CENTER))
         styles.add(ParagraphStyle(name='CustomHeading',
                                   parent=styles['Heading2'],
                                   fontSize=16,
-                                  textColor=colors.HexColor('#64ffda'),
-                                  spaceAfter=12))
+                                  textColor=colors.white,
+                                  spaceAfter=12,
+                                  spaceBefore=6,
+                                  leftIndent=10))
         styles.add(ParagraphStyle(name='CustomBody',
                                   parent=styles['BodyText'],
                                   fontSize=10,
                                   spaceAfter=12))
+        styles.add(ParagraphStyle(name='TableText',
+                                  parent=styles['BodyText'],
+                                  fontSize=9,
+                                  wordWrap='CJK'))
 
-        # Title
-        title = Paragraph("🔒 Database Security Scan Report", styles['CustomTitle'])
-        elements.append(title)
-        elements.append(Spacer(1, 0.2*inch))
+        # Title with colored background
+        title_table = Table([[Paragraph("🔒 Database Security Scan Report", styles['CustomTitle'])]],
+                           colWidths=[6.5*inch])
+        title_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#0a192f')),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('TOPPADDING', (0, 0), (-1, -1), 20),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 20),
+        ]))
+        elements.append(title_table)
+        elements.append(Spacer(1, 0.3*inch))
 
         # Scan Information
         scan_info = report['scan_info']
         db_info = report['database_info']
 
-        elements.append(Paragraph("Scan Information", styles['CustomHeading']))
+        # Section header with colored background
+        header_table = Table([[Paragraph("Scan Information", styles['CustomHeading'])]],
+                            colWidths=[6.5*inch])
+        header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(header_table)
+        elements.append(Spacer(1, 0.1*inch))
+
+        # Use Paragraph for version to enable word wrapping
+        version_para = Paragraph(db_info['version'], styles['TableText'])
 
         scan_data = [
-            ['Database:', db_info['database']],
-            ['Host:', f"{db_info['host']}:{db_info['port']}"],
-            ['Version:', db_info['version'][:80]],
-            ['Framework:', scan_info['compliance_framework']],
-            ['Scan Time:', scan_info['timestamp']]
+            ['Database:', Paragraph(db_info['database'], styles['TableText'])],
+            ['Host:', Paragraph(f"{db_info['host']}:{db_info['port']}", styles['TableText'])],
+            ['Version:', version_para],
+            ['Framework:', Paragraph(scan_info['compliance_framework'], styles['TableText'])],
+            ['Scan Time:', Paragraph(scan_info['timestamp'], styles['TableText'])]
         ]
 
-        t = Table(scan_data, colWidths=[2*inch, 4*inch])
+        t = Table(scan_data, colWidths=[1.5*inch, 5*inch])
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e6f1ff')),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#0a192f')),
+            ('BACKGROUND', (1, 0), (1, -1), colors.HexColor('#f0f8ff')),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.white),
+            ('TEXTCOLOR', (1, 0), (1, -1), colors.black),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
         ]))
         elements.append(t)
@@ -191,7 +221,17 @@ class ReportGenerator:
 
         # Overall Risk Assessment
         risk = report['overall_risk_assessment']
-        elements.append(Paragraph("Overall Risk Assessment", styles['CustomHeading']))
+
+        # Section header with colored background
+        header_table = Table([[Paragraph("Overall Risk Assessment", styles['CustomHeading'])]],
+                            colWidths=[6.5*inch])
+        header_table.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+        ]))
+        elements.append(header_table)
+        elements.append(Spacer(1, 0.1*inch))
 
         # Risk summary table
         risk_color = colors.red if risk['risk_level'] == 'critical' else \
@@ -199,26 +239,31 @@ class ReportGenerator:
                      colors.yellow if risk['risk_level'] == 'medium' else colors.green
 
         risk_data = [
-            ['Security Score:', f"{risk['security_score']}/100"],
-            ['Risk Level:', risk['risk_level'].upper()],
-            ['Critical Issues:', str(risk['critical_issue_count'])],
-            ['Warnings:', str(risk['warning_count'])],
-            ['Vulnerabilities:', str(risk['vulnerability_count'])],
-            ['Compliance:', f"{risk['compliance_percentage']:.1f}%"]
+            ['Security Score:', Paragraph(f"{risk['security_score']}/100", styles['TableText'])],
+            ['Risk Level:', Paragraph(risk['risk_level'].upper(), styles['TableText'])],
+            ['Critical Issues:', Paragraph(str(risk['critical_issue_count']), styles['TableText'])],
+            ['Warnings:', Paragraph(str(risk['warning_count']), styles['TableText'])],
+            ['Vulnerabilities:', Paragraph(str(risk['vulnerability_count']), styles['TableText'])],
+            ['Compliance:', Paragraph(f"{risk['compliance_percentage']:.1f}%", styles['TableText'])]
         ]
 
-        t = Table(risk_data, colWidths=[2*inch, 4*inch])
+        t = Table(risk_data, colWidths=[1.5*inch, 5*inch])
         t.setStyle(TableStyle([
-            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#e6f1ff')),
+            ('BACKGROUND', (0, 0), (0, -1), colors.HexColor('#0a192f')),
+            ('BACKGROUND', (1, 0), (1, -1), colors.HexColor('#f0f8ff')),
             ('BACKGROUND', (1, 1), (1, 1), risk_color),
-            ('TEXTCOLOR', (0, 0), (-1, -1), colors.black),
+            ('TEXTCOLOR', (0, 0), (0, -1), colors.white),
+            ('TEXTCOLOR', (1, 0), (1, -1), colors.black),
             ('TEXTCOLOR', (1, 1), (1, 1), colors.white),
             ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+            ('VALIGN', (0, 0), (-1, -1), 'TOP'),
             ('FONTNAME', (0, 0), (0, -1), 'Helvetica-Bold'),
             ('FONTNAME', (1, 1), (1, 1), 'Helvetica-Bold'),
-            ('FONTSIZE', (0, 0), (-1, -1), 10),
-            ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
-            ('TOPPADDING', (0, 0), (-1, -1), 6),
+            ('FONTSIZE', (0, 0), (-1, -1), 9),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ('TOPPADDING', (0, 0), (-1, -1), 8),
+            ('LEFTPADDING', (0, 0), (-1, -1), 8),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 8),
             ('GRID', (0, 0), (-1, -1), 0.5, colors.grey)
         ]))
         elements.append(t)
@@ -227,7 +272,16 @@ class ReportGenerator:
         # Configuration Analysis
         config_analysis = report['config_analysis']
         if config_analysis.get('issues'):
-            elements.append(Paragraph("Configuration Analysis", styles['CustomHeading']))
+            # Section header with colored background
+            header_table = Table([[Paragraph("Configuration Analysis", styles['CustomHeading'])]],
+                                colWidths=[6.5*inch])
+            header_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(header_table)
+            elements.append(Spacer(1, 0.15*inch))
 
             for issue in config_analysis['issues'][:10]:  # Limit to 10 issues
                 severity_color = colors.red if issue['severity'] == 'critical' else \
@@ -245,7 +299,17 @@ class ReportGenerator:
         vuln_analysis = report['vulnerability_analysis']
         if vuln_analysis.get('vulnerabilities'):
             elements.append(PageBreak())
-            elements.append(Paragraph("Vulnerability Analysis", styles['CustomHeading']))
+
+            # Section header with colored background
+            header_table = Table([[Paragraph("Vulnerability Analysis", styles['CustomHeading'])]],
+                                colWidths=[6.5*inch])
+            header_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(header_table)
+            elements.append(Spacer(1, 0.15*inch))
 
             for vuln in vuln_analysis['vulnerabilities'][:10]:  # Limit to 10
                 vuln_text = f"<b>[{vuln['severity'].upper()}]</b> {vuln['title']}"
@@ -261,7 +325,17 @@ class ReportGenerator:
         compliance = report['compliance_analysis']
         if compliance.get('failed_checks'):
             elements.append(PageBreak())
-            elements.append(Paragraph(f"{scan_info['compliance_framework']} Compliance", styles['CustomHeading']))
+
+            # Section header with colored background
+            header_table = Table([[Paragraph(f"{scan_info['compliance_framework']} Compliance", styles['CustomHeading'])]],
+                                colWidths=[6.5*inch])
+            header_table.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, -1), colors.HexColor('#2c5282')),
+                ('TOPPADDING', (0, 0), (-1, -1), 8),
+                ('BOTTOMPADDING', (0, 0), (-1, -1), 8),
+            ]))
+            elements.append(header_table)
+            elements.append(Spacer(1, 0.15*inch))
 
             comp_summary = f"<b>Compliance Rate:</b> {compliance['compliance_percentage']:.1f}% " \
                           f"({compliance['passed_checks']}/{compliance['total_checks']} checks passed)"
